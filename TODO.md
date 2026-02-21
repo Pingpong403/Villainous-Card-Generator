@@ -1,0 +1,7 @@
+- Manually bold words
+- Un-bold auto-bolded words
+- Titles can have multiple lines, but only manually
+- Inline action symbols
+- Resizable action symbols
+- % is partial line, %% is full line
+- Spaces are completely ignored except to divide words

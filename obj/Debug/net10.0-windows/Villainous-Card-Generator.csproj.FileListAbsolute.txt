@@ -1,0 +1,14 @@
+C:\Users\pingp\OneDrive\Documents\C#\Villainous-Card-Generator\bin\Debug\net10.0-windows\Villainous-Card-Generator.exe
+C:\Users\pingp\OneDrive\Documents\C#\Villainous-Card-Generator\bin\Debug\net10.0-windows\Villainous-Card-Generator.deps.json
+C:\Users\pingp\OneDrive\Documents\C#\Villainous-Card-Generator\bin\Debug\net10.0-windows\Villainous-Card-Generator.runtimeconfig.json
+C:\Users\pingp\OneDrive\Documents\C#\Villainous-Card-Generator\bin\Debug\net10.0-windows\Villainous-Card-Generator.dll
+C:\Users\pingp\OneDrive\Documents\C#\Villainous-Card-Generator\bin\Debug\net10.0-windows\Villainous-Card-Generator.pdb
+C:\Users\pingp\OneDrive\Documents\C#\Villainous-Card-Generator\obj\Debug\net10.0-windows\Villainous-Card-Generator.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\pingp\OneDrive\Documents\C#\Villainous-Card-Generator\obj\Debug\net10.0-windows\Villainous-Card-Generator.AssemblyInfoInputs.cache
+C:\Users\pingp\OneDrive\Documents\C#\Villainous-Card-Generator\obj\Debug\net10.0-windows\Villainous-Card-Generator.AssemblyInfo.cs
+C:\Users\pingp\OneDrive\Documents\C#\Villainous-Card-Generator\obj\Debug\net10.0-windows\Villainous-Card-Generator.csproj.CoreCompileInputs.cache
+C:\Users\pingp\OneDrive\Documents\C#\Villainous-Card-Generator\obj\Debug\net10.0-windows\Villainous-Card-Generator.dll
+C:\Users\pingp\OneDrive\Documents\C#\Villainous-Card-Generator\obj\Debug\net10.0-windows\refint\Villainous-Card-Generator.dll
+C:\Users\pingp\OneDrive\Documents\C#\Villainous-Card-Generator\obj\Debug\net10.0-windows\Villainous-Card-Generator.pdb
+C:\Users\pingp\OneDrive\Documents\C#\Villainous-Card-Generator\obj\Debug\net10.0-windows\Villainous-Card-Generator.genruntimeconfig.cache
+C:\Users\pingp\OneDrive\Documents\C#\Villainous-Card-Generator\obj\Debug\net10.0-windows\ref\Villainous-Card-Generator.dll
