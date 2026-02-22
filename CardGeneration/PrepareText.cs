@@ -136,7 +136,7 @@ namespace Villainous_Card_Generator.CardGeneration
 			do
 			{
 				// Combine every given ability into one metric
-				lineHeight = TextRenderer.MeasureText("Tq", font, new Size(1000, 1000), tf).Height * lineSpacing;
+				lineHeight = TextRenderer.MeasureText("TjJ", font, new Size(1000, 1000), tf).Height * lineSpacing;
 				abilityHeight = ability == "" ? 0 : MeasureWordByWord(GetCardWords(ability, textColor, font, keywordsAndColors), tf, maxWidth, lineHeight);
 				activateAbilityHeight = 0;
 				if (activateAbility != "" || activateCost != "")
@@ -167,13 +167,13 @@ namespace Villainous_Card_Generator.CardGeneration
 				paddingHeight = numPadding * lineHeight * paddingLines;
 				textHeight = abilityHeight + activateAbilityHeight + gainsActionHeight + paddingHeight;
 
-				if (textHeight > maxHeight - (activateAbility != "" && ability == "" ? textHeight * 0.25 : 0)) font = new Font(font.Name, font.Size - granularity, font.Style, font.Unit);
+				if (textHeight > maxHeight - (activateAbility != "" && ability == "" ? textHeight * 0.1 : 0)) font = new Font(font.Name, font.Size - granularity, font.Style, font.Unit);
 			} while (textHeight > maxHeight);
 
 			// Check if font size went below minimum and notify the user
 			if (font.Size < minFontSize)
 			{
-				Console.WriteLine($"THE FOLLOWING CARD'S ABILITY TEXT WENT BELOW THE MIMUMUM {minFontSize}px:");
+				Console.WriteLine($"The following card's Ability went below the minimum {minFontSize}px:");
 			}
 
 			List<CardWord> colon = GetCardWords(":", textColor, font, keywordsAndColors);
@@ -214,7 +214,7 @@ namespace Villainous_Card_Generator.CardGeneration
 					}
 					if (ability == "" && activateAbility != "")
 					{
-						currentY = lineHeight * 0.25F;
+						currentY = lineHeight * 0.1F;
 					}
 					DrawSymbol(activateSymbol, drawing, textColor, symbolCenterX, currentY + actionSymbolLines * lineHeight / 2, resizing);
 					
@@ -468,7 +468,7 @@ namespace Villainous_Card_Generator.CardGeneration
 				FontLoader.GetFont(boldPath, defaultFont.Size, FontStyle.Bold) :
 				new(defaultFont, FontStyle.Bold);
 
-			Font boldItalicFont = new Font(defaultFont, FontStyle.Bold | FontStyle.Italic);
+			Font boldItalicFont = new Font(boldFont, FontStyle.Bold | FontStyle.Italic);
 
 			List<CardWord> cardWords = [];
 
@@ -485,10 +485,11 @@ namespace Villainous_Card_Generator.CardGeneration
 					if (builtWord != "")
 					{
 						bool isKeyword = keywordData != null && keywordData.TryGetValue(builtWord, out string? value);
+						bool boldWord = isKeyword && !boldOpen || !isKeyword && boldOpen;
 						CardWord word = new(
 							builtWord,
 							isKeyword && !ignoreFormatting ? Color.FromArgb(Convert.ToInt32("ff" + keywordData[builtWord], 16)) : defaultColor,
-							isKeyword && !ignoreFormatting ? (italicsOpen ? boldItalicFont : boldFont) : italicsOpen ? italicFont : defaultFont
+							boldWord && !ignoreFormatting ? (italicsOpen ? boldItalicFont : boldFont) : italicsOpen ? italicFont : defaultFont
 						);
 						word.SetType(isType);
 						if (isType && typeIsCaps) word.SetText(word.GetText().ToUpper());
@@ -502,6 +503,7 @@ namespace Villainous_Card_Generator.CardGeneration
 				{
 					// If the next was a symbol, then we escape it
 					if (letter == italicSymbol ||
+						letter == boldSymbol   ||
 						letter == escapeSymbol ||
 						letter == newlineSymbol
 						)
@@ -525,10 +527,29 @@ namespace Villainous_Card_Generator.CardGeneration
 						if (builtWord != "")
 						{
 							bool isKeyword = keywordData != null && keywordData.TryGetValue(builtWord, out string? value);
+							bool boldWord = isKeyword && !boldOpen || !isKeyword && boldOpen;
 							CardWord word = new(
 								builtWord,
 								isKeyword && !ignoreFormatting ? Color.FromArgb(Convert.ToInt32("ff" + keywordData[builtWord], 16)) : defaultColor,
-								isKeyword && !ignoreFormatting ? (!italicsOpen ? boldItalicFont : boldFont) : !italicsOpen ? italicFont : defaultFont
+								boldWord && !ignoreFormatting ? (!italicsOpen ? boldItalicFont : boldFont) : !italicsOpen ? italicFont : defaultFont
+							);
+							word.SetType(isType);
+							if (isType && typeIsCaps) word.SetText(word.GetText().ToUpper());
+							cardWords.Add(word);
+							builtWord = "";
+						}
+					}
+					else if (letter == boldSymbol)
+					{
+						boldOpen = !boldOpen;
+						if (builtWord != "")
+						{
+							bool isKeyword = keywordData != null && keywordData.TryGetValue(builtWord, out string? value);
+							bool boldWord = isKeyword && boldOpen || !isKeyword && !boldOpen;
+							CardWord word = new(
+								builtWord,
+								isKeyword && !ignoreFormatting ? Color.FromArgb(Convert.ToInt32("ff" + keywordData[builtWord], 16)) : defaultColor,
+								boldWord && !ignoreFormatting ? (italicsOpen ? boldItalicFont : boldFont) : italicsOpen ? italicFont : defaultFont
 							);
 							word.SetType(isType);
 							if (isType && typeIsCaps) word.SetText(word.GetText().ToUpper());
@@ -545,10 +566,11 @@ namespace Villainous_Card_Generator.CardGeneration
 						if (builtWord != "")
 						{
 							bool isKeyword = keywordData != null && keywordData.TryGetValue(builtWord, out string? value);
+							bool boldWord = isKeyword && !boldOpen || !isKeyword && boldOpen;
 							CardWord word = new(
 								builtWord,
 								isKeyword && !ignoreFormatting ? Color.FromArgb(Convert.ToInt32("ff" + keywordData[builtWord], 16)) : defaultColor,
-								isKeyword && !ignoreFormatting ? (italicsOpen ? boldItalicFont : boldFont) : italicsOpen ? italicFont : defaultFont
+								boldWord && !ignoreFormatting ? (italicsOpen ? boldItalicFont : boldFont) : italicsOpen ? italicFont : defaultFont
 							);
 							word.SetType(isType);
 							if (isType && typeIsCaps) word.SetText(word.GetText().ToUpper());
@@ -563,10 +585,11 @@ namespace Villainous_Card_Generator.CardGeneration
 						if (MiscHelper.IsPunctuation(Convert.ToString(letter)) && builtWord != "")
 						{
 							bool isKeyword = keywordData != null && keywordData.TryGetValue(builtWord, out string? value);
+							bool boldWord = isKeyword && !boldOpen || !isKeyword && boldOpen;
 							CardWord word = new(
 								builtWord,
 								isKeyword && !ignoreFormatting ? Color.FromArgb(Convert.ToInt32("ff" + keywordData[builtWord], 16)) : defaultColor,
-								isKeyword && !ignoreFormatting ? (italicsOpen ? boldItalicFont : boldFont) : italicsOpen ? italicFont : defaultFont
+								boldWord && !ignoreFormatting ? (italicsOpen ? boldItalicFont : boldFont) : italicsOpen ? italicFont : defaultFont
 							);
 							word.SetType(isType);
 							if (isType && typeIsCaps) word.SetText(word.GetText().ToUpper());
@@ -586,10 +609,11 @@ namespace Villainous_Card_Generator.CardGeneration
 			if (builtWord != "")
 			{
 				bool isKeyword = keywordData != null && keywordData.TryGetValue(builtWord, out string? value);
+				bool boldWord = isKeyword && !boldOpen || !isKeyword && boldOpen;
 				CardWord word = new(
 					builtWord,
 					isKeyword && !ignoreFormatting ? Color.FromArgb(Convert.ToInt32("ff" + keywordData[builtWord], 16)) : defaultColor,
-					isKeyword && !ignoreFormatting ? (italicsOpen ? boldItalicFont : boldFont) : italicsOpen ? italicFont : defaultFont
+					boldWord && !ignoreFormatting ? (italicsOpen ? boldItalicFont : boldFont) : italicsOpen ? italicFont : defaultFont
 				);
 				word.SetType(isType);
 				if (isType && typeIsCaps) word.SetText(word.GetText().ToUpper());
@@ -675,6 +699,7 @@ namespace Villainous_Card_Generator.CardGeneration
 			// Set up variables we'll potentially need
 			float dlLines = float.Parse(ConfigHelper.GetConfigValue("asset", "dividingLineLines"));
 			float asLines = float.Parse(ConfigHelper.GetConfigValue("asset", "actionSymbolLines"));
+			int horizontalPadding = int.Parse(ConfigHelper.GetConfigValue("text", "wordHorizontalPadding"));
 			Color color = ColorTranslator.FromHtml("#" + ConfigHelper.GetConfigValue("color", "fontColor"));
 
 			// Draw text word by word
@@ -745,17 +770,19 @@ namespace Villainous_Card_Generator.CardGeneration
 					if (word.GetText() != "\n")
 					{
 						float wordWidth = words[iDraw].GetSizeF((int)maxW, tf).Width;
-						Bitmap textB = new((int)wordWidth, (int)lineH);
+						float wordHeight = words[iDraw].GetSizeF((int)maxW, tf).Height;
+						Bitmap textB = new((int)wordWidth + horizontalPadding, (int)wordHeight);
 						Graphics textG = Graphics.FromImage(textB);
 						textG.CompositingQuality = CompositingQuality.HighQuality;
 						textG.InterpolationMode = InterpolationMode.HighQualityBilinear;
 						textG.PixelOffsetMode = PixelOffsetMode.HighQuality;
 						textG.SmoothingMode = SmoothingMode.HighQuality;
 						textG.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-						textG.Clear(Color.Black);
-						TextRenderer.DrawText(textG, word.GetText(), word.GetTextFont(), new Rectangle(0, 0, (int)wordWidth, (int)lineH), word.GetTextColor(), tf);
-						MiscHelper.FixTransparency(textB, word.GetTextColor(), Color.Black);
-						g.DrawImage(textB, new Point((int)currentX, (int)currentY));
+						Color bgColor = Color.Black;
+						textG.Clear(bgColor);
+						TextRenderer.DrawText(textG, word.GetText(), word.GetTextFont(), new Rectangle(0, 0, (int)wordWidth + horizontalPadding, (int)wordHeight), word.GetTextColor(), bgColor, tf);
+						MiscHelper.FixTransparency(textB, word.GetTextColor(), bgColor);
+						g.DrawImage(textB, new Point((int)currentX - horizontalPadding / 2, (int)currentY));
 						currentX += wordWidth;
 					}
 					iDraw++;

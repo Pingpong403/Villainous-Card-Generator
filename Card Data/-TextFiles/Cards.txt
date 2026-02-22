@@ -1,5 +1,5 @@
 # Start comment lines with the pound (#) symbol
-# Make words *italic* or remove \formatting from any word. You can change these symbols in text-config.txt
+# Make words *italic* or $bold$ or remove \formatting from any word. You can change these symbols in text-config.txt
 # Different cards belong on different lines
 # If a field is unused, keep it empty
 # Fields in order from left to right (separate each with a TAB):
@@ -9,4 +9,4 @@
 Test Hero		4	This Hero has a cool Ability :)			Hero			Fate	
 
 # Villain Deck
-Test Ally	2	4	This Ally has an even cooler Ability :D			Ally			Villain	
+Jetsam	2	4		Move a Hero from Jetsam's % location to an adjacent % unlocked location.		Ally			Villain	

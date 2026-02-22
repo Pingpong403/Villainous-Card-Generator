@@ -3,7 +3,7 @@ h:2044
 imageAreaHeight:973
 textAreaMaxWidth:1230
 titleAreaMaxHeight:166
-abilityAreaMaxHeight:645
+abilityAreaMaxHeight:639
 activateCostAreaMaxWidth:670
 sideActivateAbilityMaxWidth:750
 sideActivateAbilityCenterX:880
