@@ -13,10 +13,10 @@ Ensure you have Git installed on your system. [Here](https://git-scm.com/install
 
 ## How to Use this Generator
 ### If you would like to use this generator for making DisVil customs:
-1) Update the files in -TextFiles with your card data.
-2) Place layout and card images in -Layout and -Images, respectively.
-3) Update the files in -Settings, if desired.
-4) Run `Villainous-Card-Generator.exe` to assemble the cards. They will be found in -Exports.
+1) Update the files in `-TextFiles\` with your card data.
+2) Place layout and card images in `-Layout\` and `-Images\`, respectively.
+3) Update the files in `-Settings\`, if desired.
+4) Run `Villainous-Card-Generator.exe` to assemble the cards. They will be found in `-Exports\`.
 <br><br>
 ### Otherwise, if you are looking to outfit this generator for another system:
 1) Delete all of the images in `assets\` (except for `black_bg.png`) and replace them with the system's custom assets.
