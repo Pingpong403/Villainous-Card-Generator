@@ -6,11 +6,6 @@ namespace Villainous_Card_Generator.CardGeneration
 {
 	public static class MiscHelper
 	{
-		/// <summary>
-		/// Run this check before the generator is run to ensure the executable is in the right spot
-		/// within the project, and all the necessary directories exist.
-		/// </summary>
-		/// <returns>whether or not the proper file structure exists</returns>
 		public static bool CheckStructure()
 		{
 			// 1, 2, 4, 8, 16, 32 - higher number, more extreme
@@ -46,12 +41,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			}
 		}
 
-		/// <summary>
-		/// Gets all the lines in a given -TextFiles sub-directory.
-		/// </summary>
-		/// <param name="file">The file to be searched, not including the extension.</param>
-		/// <returns>Each non-comment line found in the file.</returns>
-		/// <exception cref="FileNotFoundException"></exception>
 		public static List<string> GetTextFilesLines(string file)
 		{
 			List<string> lines = [];
@@ -97,6 +86,44 @@ namespace Villainous_Card_Generator.CardGeneration
 			return lines;
 		}
 
+		public static string CleanTitle(string title)
+		{
+			string cleanTitle = "";
+
+			bool alreadyAddedSpace = false;
+			foreach (char letter in title)
+			{
+				// For spaces, only add one between words
+				if (letter == ' ')
+				{
+					if (!alreadyAddedSpace)
+					{
+						cleanTitle += ' ';
+						alreadyAddedSpace = true;
+					}
+				}
+
+				// For newline characters, remove them and add a space
+				else if (letter == '%' || letter == '\n')
+				{
+					if (!alreadyAddedSpace)
+					{
+						cleanTitle += ' ';
+						alreadyAddedSpace = true;
+					}
+				}
+
+				// For everything else, only add the letter
+				else
+				{
+					cleanTitle += letter;
+					alreadyAddedSpace = false;
+				}
+			}
+
+			return cleanTitle;
+		}
+
 		public static Point GetElementPos(string element)
 		{
 			int elementCenterX = int.Parse(ConfigHelper.GetConfigValue("layout", element + "CenterX"));
@@ -104,12 +131,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			return new Point(elementCenterX, elementCenterY);
 		}
 
-		/// <summary>
-		/// Looks in -Layout for the given deck element.
-		/// </summary>
-		/// <param name="deck">the deck name</param>
-		/// <param name="element">the element name</param>
-		/// <returns>whether or not the given deck element exists</returns>
 		public static bool ElementExists(string deck, string element)
 		{
 			string relativePath = Path.Combine("Card Data", "-Layout", deck + element + ".png");
@@ -126,11 +147,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			return true;
 		}
 
-		/// <summary>
-		/// Returns the extension belonging to this asset name.
-		/// </summary>
-		/// <param name="assetName">asset name to find the extension of</param>
-		/// <returns>the extension, whether .png, .jpg, or .jpeg, of the asset found, or ""</returns>
 		public static string FindExtension(string dir, string fileName)
 		{
 			string pathNoExt = Path.Combine(dir, fileName);
@@ -171,11 +187,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			}
 		}
 
-		/// <summary>
-		/// Changes the color of the given symbol.
-		/// </summary>
-		/// <param name="symbol">the symbol to change</param>
-		/// <param name="color">the color to change the symbol to</param>
 		public static void ColorSymbol(Bitmap symbol, Color color)
 		{
 			for (int x = 0; x < symbol.Width; x++)
@@ -188,13 +199,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			}
 		}
 
-		/// <summary>
-		/// Helper method to capitalize just the first letter in a string.
-		/// </summary>
-		/// <param name="input">String to be capitalized</param>
-		/// <returns>The capitalized string</returns>
-		/// <exception cref="ArgumentNullException"></exception>
-		/// <exception cref="ArgumentException"></exception>
 		/// <meta>Original code from https://stackoverflow.com/a/4405876</meta>
 		public static string Capitalize(this string input) =>
         input switch
@@ -204,11 +208,6 @@ namespace Villainous_Card_Generator.CardGeneration
             _ => string.Concat(input[0].ToString().ToUpper(), input.AsSpan(1))
         };
 
-		/// <summary>
-		/// Punctuation hugs the ends of words.
-		/// </summary>
-		/// <param name="text">Text to be compared to list of punctuation.</param>
-		/// <returns>Whether or not given text is punctuation.</returns>
 		public static bool IsPunctuation(string text)
 		{
 			if (".?!,;:/-".Contains(text))

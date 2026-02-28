@@ -6,11 +6,6 @@ namespace Villainous_Card_Generator.CardGeneration
 {
 	public static class KeywordHelper
 	{
-		/// <summary>
-		/// Gets all the keywords that exist in Keywords.txt
-		/// </summary>
-		/// <returns>A hashset of all keywords found.</returns>
-		/// <exception cref="FileNotFoundException"></exception>
 		public static HashSet<string> GetKeywords()
 		{
 			HashSet<string> keywords = [];
@@ -27,10 +22,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			return keywords;
 		}
 
-		/// <summary>
-		/// Gets every specified keyword and the color it should use.
-		/// </summary>
-		/// <returns>a dictionary containing every possible keyword and associated color</returns>
 		public static Dictionary<string, string> GetColorMapping()
 		{
 			Dictionary<string, string> baseKeywordColors = [];

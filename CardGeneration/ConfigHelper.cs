@@ -5,13 +5,6 @@ namespace Villainous_Card_Generator.CardGeneration
 {
 	public static class ConfigHelper
 	{
-		/// <summary>
-		/// Get the value of a config element.
-		/// </summary>
-		/// <param name="configFile">The file to be searched, not including the "-config.txt".</param>
-		/// <param name="key">The key whose value you seek.</param>
-		/// <returns>The value, if any, corresponding to the key in the given file.</returns>
-		/// <exception cref="FileNotFoundException"></exception>
 		public static string GetConfigValue(string configFile, string key)
 		{
 			string path = PathHelper.GetFullPath(Path.Combine("config", configFile + "-config.txt"));
@@ -55,12 +48,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			return "";
 		}
 
-		/// <summary>
-		/// Gets every key, value pair in a given config file.
-		/// </summary>
-		/// <param name="configFile">The file to be searched, not including the "-config.txt".</param>
-		/// <returns>All key, value pairs found in the file.</returns>
-		/// <exception cref="FileNotFoundException"></exception>
 		public static Dictionary<string, string> GetAllValues(string configFile)
 		{
 			string path = PathHelper.GetFullPath(Path.Combine("config", configFile + "-config.txt"));

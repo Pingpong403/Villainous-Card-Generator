@@ -7,3 +7,7 @@
 # Whether or not you want your cards to be sorted by Deck when exported.
 # Accepts: true, false. Default: false
 exportByDeck:
+
+# Whether or not you want the generator to only generate cards that have been changed.
+# Accepts: true, false. Default: false
+trackChanges:

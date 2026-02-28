@@ -12,6 +12,8 @@ topRightFontSize:95
 bottomRightFontSize:95
 typeFontSize:90
 wordHorizontalPadding:20
+titleLineSpacingFactor:0.68
+titleFontDecreaseGranularity:1
 typeIsBold:true
 typeIsCaps:false
 typeInAbilityIsBold:true

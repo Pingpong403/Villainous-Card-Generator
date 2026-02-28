@@ -11,10 +11,6 @@ namespace Villainous_Card_Generator.CardGeneration
         // Cache font collections so fonts remain valid for the app lifetime
         private static PrivateFontCollection altFont = new();
 
-        /// <summary>
-        /// Loads the alt font for future use.
-        /// </summary>
-        /// <exception cref="FileNotFoundException"></exception>
         public static void LoadAltFont()
         {
             string altFontFile = ConfigHelper.GetConfigValue("text", "altFont");
@@ -29,15 +25,6 @@ namespace Villainous_Card_Generator.CardGeneration
             altFont = collection;
         }
 
-        /// <summary>
-        /// Loads an OTF/TTF from the project fonts folder and creates a Font.
-        /// </summary>
-        /// <param name="fontFileName">the full file name for the font</param>
-        /// <param name="size">the size of the font</param>
-        /// <param name="style">the style of the font</param>
-        /// <param name="unit">the unit the font should be measured in</param>
-        /// <returns>the Font object with the given specifications</returns>
-        /// <exception cref="InvalidOperationException"></exception>
         public static Font GetFont(string fontFileName, float size, FontStyle style = FontStyle.Regular, GraphicsUnit unit = GraphicsUnit.Pixel)
         {
             var relativePath = Path.Combine("fonts", fontFileName);

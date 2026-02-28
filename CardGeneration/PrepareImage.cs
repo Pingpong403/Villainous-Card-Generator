@@ -11,10 +11,6 @@ namespace Villainous_Card_Generator.CardGeneration
 {
 	public static class PrepareImage
 	{
-		/// <summary>
-		/// Produce a properly sized card image, ready to be inserted onto card, from any size
-		/// </summary>
-		/// <param name="imageName">The name of the image file, not including extension</param>
 		/// <meta>Original code from https://www.c-sharpcorner.com/UploadFile/ishbandhu2009/resize-an-image-in-C-Sharp/</meta>
 		public static void SizeCardImage(string imageName)
 		{
@@ -53,15 +49,10 @@ namespace Villainous_Card_Generator.CardGeneration
 			b.Save(outpath, ImageFormat.Png);
 		}
 
-		/// <summary>
-		/// Puts together all the images in the intermediary directories
-		/// and saves the result in -Exports.
-		/// </summary>
-		/// <param name="cardTitle">The title of the card to be combined</param>
-		/// <param name="deck">What deck the card belongs to (Villain, Fate, etc.)</param>
 		public static void CombineImages(string cardTitle, string deck)
 		{
 			string capitalizedDeck = MiscHelper.Capitalize(deck.ToLower());
+			string cleanTitle = MiscHelper.CleanTitle(cardTitle);
 
 			var imageIntermediaryPath = PathHelper.GetFullPath(Path.Combine("temp", "ImageIntermediary"));
 			var textIntermediaryPath = PathHelper.GetFullPath(Path.Combine("temp", "TextIntermediary"));
@@ -70,7 +61,7 @@ namespace Villainous_Card_Generator.CardGeneration
 
 			// All possible elements: image, Title, Ability, Type,
 			// Cost, Strength, TopRight, BottomRight
-			var imagePath = Path.Combine(imageIntermediaryPath, cardTitle + ".png");
+			var imagePath = Path.Combine(imageIntermediaryPath, cleanTitle + ".png");
 			var altImagePath = Path.Combine(assetsPath, "black_bg.png");
 			var titlePath = Path.Combine(textIntermediaryPath, "Title.png");
 			var abilityPath = Path.Combine(textIntermediaryPath, "Ability.png");
@@ -93,7 +84,7 @@ namespace Villainous_Card_Generator.CardGeneration
 			// Necessary elements: Title, Ability, Type
 			if (!(File.Exists(titlePath) && File.Exists(abilityPath) && File.Exists(typePath)))
 			{
-				Console.WriteLine($"Missing Title, Ability, or Type field(s) for {cardTitle}!");
+				Console.WriteLine($"Missing Title, Ability, or Type field(s) for {cleanTitle}!");
 				return;
 			}
 
@@ -111,7 +102,7 @@ namespace Villainous_Card_Generator.CardGeneration
 			// Deck background
 			if (!MiscHelper.ElementExists(capitalizedDeck, "Deck"))
 			{
-				Console.WriteLine($"Missing {capitalizedDeck}Deck.png for {cardTitle}.");
+				Console.WriteLine($"Missing {capitalizedDeck}Deck.png for {cleanTitle}.");
 				return;
 			}
 			using (Image bgImg = Image.FromFile(Path.Combine(layoutPath, capitalizedDeck + "Deck.png")))
@@ -147,7 +138,7 @@ namespace Villainous_Card_Generator.CardGeneration
 			{
 				if (!MiscHelper.ElementExists(capitalizedDeck, "Cost"))
 				{
-					Console.WriteLine($"Missing {capitalizedDeck}Cost.png for {cardTitle}.");
+					Console.WriteLine($"Missing {capitalizedDeck}Cost.png for {cleanTitle}.");
 					return;
 				}
 				g.DrawImage(Image.FromFile(Path.Combine(layoutPath, capitalizedDeck + "Cost.png")), new Rectangle(0, 0, cardWidth, cardHeight));
@@ -163,7 +154,7 @@ namespace Villainous_Card_Generator.CardGeneration
 			{
 				if (!MiscHelper.ElementExists(capitalizedDeck, "Strength"))
 				{
-					Console.WriteLine($"Missing {capitalizedDeck}Strength.png for {cardTitle}.");
+					Console.WriteLine($"Missing {capitalizedDeck}Strength.png for {cleanTitle}.");
 					return;
 				}
 				g.DrawImage(Image.FromFile(Path.Combine(layoutPath, capitalizedDeck + "Strength.png")), new Rectangle(0, 0, cardWidth, cardHeight));
@@ -179,7 +170,7 @@ namespace Villainous_Card_Generator.CardGeneration
 			{
 				if (!MiscHelper.ElementExists(capitalizedDeck, "TopRight"))
 				{
-					Console.WriteLine($"Missing {capitalizedDeck}TopRight.png for {cardTitle}.");
+					Console.WriteLine($"Missing {capitalizedDeck}TopRight.png for {cleanTitle}.");
 					return;
 				}
 				g.DrawImage(Image.FromFile(Path.Combine(layoutPath, capitalizedDeck + "TopRight.png")), new Rectangle(0, 0, cardWidth, cardHeight));
@@ -195,7 +186,7 @@ namespace Villainous_Card_Generator.CardGeneration
 			{
 				if (!MiscHelper.ElementExists(capitalizedDeck, "BottomRight"))
 				{
-					Console.WriteLine($"Missing {capitalizedDeck}BottomRight.png for {cardTitle}.");
+					Console.WriteLine($"Missing {capitalizedDeck}BottomRight.png for {cleanTitle}.");
 					return;
 				}
 				g.DrawImage(Image.FromFile(Path.Combine(layoutPath, capitalizedDeck + "BottomRight.png")), new Rectangle(0, 0, cardWidth, cardHeight));
@@ -211,14 +202,11 @@ namespace Villainous_Card_Generator.CardGeneration
 			var relativeOutDir = Path.Combine("Card Data", "-Exports", saveByDeck ? deck : "");
 			var outDir = PathHelper.GetFullPath(relativeOutDir);
 			Directory.CreateDirectory(outDir);
-			var outpath = Path.Combine(outDir, $"{cardTitle}.png");
+			var outpath = Path.Combine(outDir, $"{cleanTitle}.png");
 			b.Save(outpath, ImageFormat.Png);
-			Console.WriteLine($"Image saved: {cardTitle}");
+			Console.WriteLine($"Image saved: {cleanTitle}");
 		}
 
-		/// <summary>
-		/// Deletes all files in each intermediary directory.
-		/// </summary>
 		public static void CleanIntermediaries()
 		{
 			var imageIntermediaryPath = PathHelper.GetFullPath(Path.Combine("temp", "ImageIntermediary"));

@@ -4,11 +4,6 @@ namespace Villainous_Card_Generator.CardGeneration
 {
 	public static class AssetHelper
 	{
-		/// <summary>
-		/// Checks whether the given asset exists.
-		/// </summary>
-		/// <param name="assetCode">the name of the asset, including the asset symbol</param>
-		/// <returns>whether or not the given asset was found in the assets folder</returns>
 		public static bool AssetExists(string assetCode, bool lenient = false)
 		{
 			string assetName;
@@ -31,11 +26,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			return File.Exists(PathHelper.GetFullPath(relativePath));
 		}
 
-		/// <summary>
-		/// Strips the trailing asset symbol from the given asset code.
-		/// </summary>
-		/// <param name="assetCode">the code for the asset, including the asset symbol</param>
-		/// <returns></returns>
 		public static string GetAssetName(string assetCode, bool lenient = false)
 		{
 			if (assetCode == "") return "";
@@ -50,11 +40,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			return new string(letters);
 		}
 
-		/// <summary>
-		/// Checks whether a gains action code is a Gain x Power symbol.
-		/// </summary>
-		/// <param name="gainsActionCode">the string to be checked</param>
-		/// <returns>the amount of power if this is a gain power code, otherwise an empty string</returns>
 		public static string GainPowerAmount(string gainsActionCode)
 		{
 			char[] letters = gainsActionCode.ToCharArray();

@@ -6,16 +6,12 @@ namespace Villainous_Card_Generator.CardGeneration
 {
 	public static class PrepareText
 	{
-		/// <summary>
-		/// Creates an image in TextIntermediary that contains the title.
-		/// </summary>
-		/// <param name="text">title text</param>
-		/// <param name="font">font to draw the title in</param>
-		/// <param name="textColor">color to draw the title in</param>
-		/// <param name="maxWidth">maximum width the title is allowed to take up</param>
-		/// <param name="maxHeight">maximum height the title is allowed to take up</param>
 		public static void DrawTitle(string text, Font font, Color textColor, int maxWidth, int maxHeight)
 		{
+			// Setup variables
+			float granularity = float.Parse(ConfigHelper.GetConfigValue("text", "titleFontDecreaseGranularity"));
+			float lineSpacingFactor = float.Parse(ConfigHelper.GetConfigValue("text", "titleLineSpacingFactor"));
+
 			// Remove duplicate designation
 			if (text[^1] == ')' && text[^3] == '(')
 			{
@@ -45,26 +41,33 @@ namespace Villainous_Card_Generator.CardGeneration
 			// Paint a transparent background
 			drawing.Clear(Color.Transparent);
 
-			// One line maximum
-			float textHeight = TextRenderer.MeasureText(text, font, new Size(1000, 1000), tf).Height;
+			// Get all the words
+			List<CardWord> words;
+
+			// Find proper font size given line number
+			float lineHeight;
+			SizeF textSize;
+			do
+			{
+				words = GetCardWords(text, textColor, font, null);
+				lineHeight = TextRenderer.MeasureText(text, font, new Size(10000, 10000), tf).Height * lineSpacingFactor;
+				textSize = MeasureWordByWord(words, tf, 10000, lineHeight, lineSpacingFactor);
+				if (textSize.Height > maxHeight) font = new Font(font.Name, font.Size - granularity, font.Style, font.Unit);
+			} while (textSize.Height > maxHeight);
 
 			// Find the proper squish ratio for given title
-			float textFullWidth = TextRenderer.MeasureText(text, font, new Size(1000, 1000), tf).Width;
-			if (textFullWidth > maxWidth)
+			if (textSize.Width > maxWidth)
 			{
-				float horizontalSquish = maxWidth / textFullWidth;
+				float horizontalSquish = maxWidth / textSize.Width;
 				drawing.ScaleTransform(horizontalSquish, 1.0F);
-				maxWidth = (int)textFullWidth;
+				maxWidth = (int)textSize.Width;
 			}
 
-			// Get all the words
-			List<CardWord> words = GetCardWords(text, textColor, font, null);
-
 			// Set up variables
-			float startY = (maxHeight - textHeight) / 2;
+			float startY = (maxHeight - textSize.Height) / 2;
 
 			// Draw title word by word
-			DrawWordByWord(words, drawing, tf, maxWidth, textHeight, maxWidth / 2, startY);
+			DrawWordByWord(words, drawing, tf, maxWidth, lineHeight, maxWidth / 2, startY, lineSpacingFactor);
 
 			drawing.Save();
 			drawing.Dispose();
@@ -78,18 +81,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			img.Dispose();
 		}
 
-		/// <summary>
-		/// Creates an image in TextIntermediary that contains all of the text/assets needed for an ability.
-		/// </summary>
-		/// <param name="ability">ability of the card</param>
-		/// <param name="activateAbility">ability on activate of the card</param>
-		/// <param name="activateCost">cost to activate the card</param>
-		/// <param name="gainsAction">symbol for the action gained</param>
-		/// <param name="font">font to draw the text with</param>
-		/// <param name="textColor">base color to draw the text with</param>
-		/// <param name="maxWidth">maximum width this text can take</param>
-		/// <param name="maxHeight">maximum height this text can take</param>
-		/// <param name="keywordsAndColors">a dictionary to compare every word to to determine bolding and coloring</param>
 		public static void DrawAbility(string ability, string activateAbility, string activateCost, string gainsAction, Font font, Color textColor, int maxWidth, int maxHeight, Dictionary<string, string> keywordsAndColors)
 		{
 			// Set up variables we'll potentially need
@@ -137,17 +128,17 @@ namespace Villainous_Card_Generator.CardGeneration
 			{
 				// Combine every given ability into one metric
 				lineHeight = TextRenderer.MeasureText("TjJ", font, new Size(1000, 1000), tf).Height * lineSpacing;
-				abilityHeight = ability == "" ? 0 : MeasureWordByWord(GetCardWords(ability, textColor, font, keywordsAndColors), tf, maxWidth, lineHeight);
+				abilityHeight = ability == "" ? 0 : MeasureWordByWord(GetCardWords(ability, textColor, font, keywordsAndColors), tf, maxWidth, lineHeight, lineSpacing).Height;
 				activateAbilityHeight = 0;
 				if (activateAbility != "" || activateCost != "")
 				{
 					if (ability == "" || activateCost != "") // If there is no ability or there is an activate cost, measure normally
 					{
-						activateAbilityHeight += actionSymbolLines * lineHeight + MeasureWordByWord(GetCardWords(activateAbility, textColor, font, keywordsAndColors), tf, maxWidth, lineHeight);
+						activateAbilityHeight += actionSymbolLines * lineHeight + MeasureWordByWord(GetCardWords(activateAbility, textColor, font, keywordsAndColors), tf, maxWidth, lineHeight, lineSpacing).Height;
 					}
 					else
 					{
-						float aaTextHeight = MeasureWordByWord(GetCardWords(activateAbility, textColor, font, keywordsAndColors), tf, sideAAMaxW, lineHeight);
+						float aaTextHeight = MeasureWordByWord(GetCardWords(activateAbility, textColor, font, keywordsAndColors), tf, sideAAMaxW, lineHeight, lineSpacing).Height;
 						float aaSymbolHeight = actionSymbolLines * lineHeight;
 						activateAbilityTextTaller = aaTextHeight > aaSymbolHeight;
 						activateAbilityHeight += Math.Max(aaSymbolHeight, aaTextHeight);
@@ -190,7 +181,7 @@ namespace Villainous_Card_Generator.CardGeneration
 			if (ability != "")
 			{
 				words = GetCardWords(ability, textColor, font, keywordsAndColors);
-				currentY = DrawWordByWord(words, drawing, tf, maxWidth, lineHeight, maxWidth / 2, currentY);
+				currentY = DrawWordByWord(words, drawing, tf, maxWidth, lineHeight, maxWidth / 2, currentY, lineSpacing);
 				currentY += lineHeight * paddingLines;
 			}
 
@@ -223,21 +214,21 @@ namespace Villainous_Card_Generator.CardGeneration
 					{
 						float costLeftX = colonCenterX + colonPadding;
 						float activateCostWidth = maxWidth / 2;
-						float activateCostHeight = MeasureWordByWord(GetCardWords(activateCost, textColor, font, keywordsAndColors), tf, activateCostWidth, lineHeight);
+						float activateCostHeight = MeasureWordByWord(GetCardWords(activateCost, textColor, font, keywordsAndColors), tf, activateCostWidth, lineHeight, lineSpacing).Height;
 						float activateCostY = currentY + (2 * lineHeight - activateCostHeight) / 2; // maximum of 3 lines for clarity
 						if (drawColon)
 						{
 							Font acFont = new Font(font, FontStyle.Bold);
 							float costCenterX = costLeftX + TextRenderer.MeasureText(activateCost, acFont, new Size(1000, 1000), tf).Width / 2;
-							DrawWordByWord(colon, drawing, tf, maxWidth, lineHeight, colonCenterX, currentY + lineHeight / 2);
+							DrawWordByWord(colon, drawing, tf, maxWidth, lineHeight, colonCenterX, currentY + lineHeight / 2, lineSpacing);
 							words = GetCardWords(activateCost, textColor, acFont, keywordsAndColors);
-							DrawWordByWord(words, drawing, tf, activateCostWidth, lineHeight, costCenterX, activateCostY);
+							DrawWordByWord(words, drawing, tf, activateCostWidth, lineHeight, costCenterX, activateCostY, lineSpacing);
 						}
 						else
 						{
 							float costCenterX = costLeftX + TextRenderer.MeasureText(activateCost, font, new Size(1000, 1000), tf).Width / 2;
 							words = GetCardWords(activateCost, textColor, font, keywordsAndColors);
-							DrawWordByWord(words, drawing, tf, activateCostWidth, lineHeight, maxWidth / 2 + costCenterX, activateCostY);
+							DrawWordByWord(words, drawing, tf, activateCostWidth, lineHeight, maxWidth / 2 + costCenterX, activateCostY, lineSpacing);
 						}
 					}
 					currentY += actionSymbolLines * lineHeight;
@@ -246,7 +237,7 @@ namespace Villainous_Card_Generator.CardGeneration
 					if (activateAbility != "")
 					{
 						words = GetCardWords(activateAbility, textColor, font, keywordsAndColors);
-						currentY = DrawWordByWord(words, drawing, tf, maxWidth, lineHeight, maxWidth / 2, currentY);
+						currentY = DrawWordByWord(words, drawing, tf, maxWidth, lineHeight, maxWidth / 2, currentY, lineSpacing);
 					}
 				}
 				else // Otherwise, the activate ability is to the right of the symbol
@@ -260,9 +251,9 @@ namespace Villainous_Card_Generator.CardGeneration
 					float drawY = currentY;
 					if (!activateAbilityTextTaller)
 					{
-						drawY += (activateAbilityHeight - MeasureWordByWord(words, tf, sideAAMaxW, lineHeight)) / 2;
+						drawY += (activateAbilityHeight - MeasureWordByWord(words, tf, sideAAMaxW, lineHeight, lineSpacing).Height) / 2;
 					}
-					DrawWordByWord(words, drawing, tf, sideAAMaxW, lineHeight, maxWidth - sideAAMaxW / 2 - 30, drawY);
+					DrawWordByWord(words, drawing, tf, sideAAMaxW, lineHeight, maxWidth - sideAAMaxW / 2 - 30, drawY, lineSpacing);
 					currentY += activateAbilityHeight;
 				}
 				currentY += lineHeight * paddingLines;
@@ -273,7 +264,7 @@ namespace Villainous_Card_Generator.CardGeneration
 			{
 				if (ability != "" && activateAbility != "" && activateCost == "")
 				{
-					currentY = DrawWordByWord(locationGainsText, drawing, tf, maxWidth, lineHeight, maxWidth / 2, currentY);
+					currentY = DrawWordByWord(locationGainsText, drawing, tf, maxWidth, lineHeight, maxWidth / 2, currentY, lineSpacing);
 				}
 				string assetName = AssetHelper.GetAssetName(gainsAction, true);
 				string gainPowerAmt = AssetHelper.GainPowerAmount(assetName);
@@ -314,15 +305,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			img.Dispose();
 		}
 
-		/// <summary>
-		/// Creates an image in TextIntermediary that contains the specified type.
-		/// </summary>
-		/// <param name="text">text to be drawn</param>
-		/// <param name="font">font to draw the text in</param>
-		/// <param name="textColor">color to draw the text in</param>
-		/// <param name="maxWidth">maximum width the text is allowed to take up</param>
-		/// <param name="maxHeight">maximum height the text is allowed to take up</param>
-		/// <param name="keywordsAndColors">a dictionary containing all the possible keywords and their colors</param>
 		public static void DrawType(string text, Font font, Color textColor, int maxWidth, int maxHeight, Dictionary<string, string> keywordsAndColors)
 		{
 			// Set the textformatflags for center alignment and no trimming
@@ -363,7 +345,7 @@ namespace Villainous_Card_Generator.CardGeneration
 			float startY = (maxHeight - textHeight) / 2;
 
 			// Draw type word by word
-			DrawWordByWord(words, drawing, tf, maxWidth, textHeight, maxWidth / 2, startY);
+			DrawWordByWord(words, drawing, tf, maxWidth, textHeight, maxWidth / 2, startY, 1.0F);
 
 			drawing.Save();
 			drawing.Dispose();
@@ -377,15 +359,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			img.Dispose();
 		}
 
-		/// <summary>
-		/// Creates an image in TextIntermediary that contains the specified corner element.
-		/// </summary>
-		/// <param name="text">text to include in the element</param>
-		/// <param name="font">font to draw the text with</param>
-		/// <param name="textColor">color to draw the text in</param>
-		/// <param name="element">which corner element this is (e.g. "Cost", "Strength", "TopRight", or "BottomRight")</param>
-		/// <param name="maxWidth">maximum width this element can take up</param>
-		/// <param name="maxHeight">maximum height this element can take up</param>
 		public static void DrawCornerElement(string text, Font font, Color textColor, string element, int maxWidth, int maxHeight)
 		{
 			// Set the textformatflags for center alignment and no trimming
@@ -426,7 +399,7 @@ namespace Villainous_Card_Generator.CardGeneration
 			int startY = (maxHeight - textHeight) / 2;
 
 			// Draw corner element word by word
-			DrawWordByWord(words, drawing, tf, maxWidth, textHeight, maxWidth / 2, startY);
+			DrawWordByWord(words, drawing, tf, maxWidth, textHeight, maxWidth / 2, startY, 1.0F);
 
 			drawing.Save();
 			drawing.Dispose();
@@ -440,15 +413,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			img.Dispose();
 		}
 
-		/// <summary>
-		/// Goes letter by letter to build words based on formatting rules.
-		/// </summary>
-		/// <param name="text">text to be converted</param>
-		/// <param name="defaultBrush">default text brush</param>
-		/// <param name="defaultFont">default text font</param>
-		/// <param name="keywordData">a dictionary of keywords and their associated colors</param>
-		/// <param name="isType">whether or not this is the type element</param>
-		/// <returns>a list of all words as CardWord objects</returns>
 		public static List<CardWord> GetCardWords(string text, Color defaultColor, Font defaultFont, Dictionary<string, string>? keywordData, bool isType = false)
 		{
 			bool typeIsCaps = ConfigHelper.GetConfigValue("text", "typeIsCaps") == "true";
@@ -623,20 +587,12 @@ namespace Villainous_Card_Generator.CardGeneration
 			return cardWords;
 		}
 
-		/// <summary>
-		/// Takes in a list of words and measures how much vertical space they will need.
-		/// </summary>
-		/// <param name="words">the list of CardWord objects to measure</param>
-		/// <param name="g">a Graphics object to measure with</param>
-		/// <param name="sf">the StringFormat used to draw the words</param>
-		/// <param name="maxW">the maximum width the words can take up</param>
-		/// <param name="lineHeight">the height of each line</param>
-		/// <returns>the vertical space needed by these words</returns>
-		public static float MeasureWordByWord(List<CardWord> words, TextFormatFlags tf, float maxW, float lineHeight)
+		public static SizeF MeasureWordByWord(List<CardWord> words, TextFormatFlags tf, float maxW, float lineHeight, float lineSpacing)
 		{
 			float actionSymbolLines = float.Parse(ConfigHelper.GetConfigValue("asset", "actionSymbolLines"));
 			float dividingLineLines = float.Parse(ConfigHelper.GetConfigValue("asset", "dividingLineLines"));
 
+			float longestLine = 0;
 			float textHeight = 0;
 			float lineWidth = 0;
 			bool space = false;
@@ -649,6 +605,7 @@ namespace Villainous_Card_Generator.CardGeneration
 					if (lineWidth > 0) // Check if some words have already been added to line
 					{
 						textHeight += lineHeight;
+						if (lineWidth > longestLine) longestLine = lineWidth;
 						lineWidth = 0;
 						space = false;
 					}
@@ -665,36 +622,35 @@ namespace Villainous_Card_Generator.CardGeneration
 				else if (word.GetText() == "\n")
 				{
 					textHeight += lineHeight;
+					if (lineWidth > longestLine) longestLine = lineWidth;
 					lineWidth = 0.001F; // Completely ignore the text that was already built up
 				}
 				// Generic case: add word's width (+ space), check if over
 				else
 				{
-					lineWidth += word.GetSizeF((int)maxW, tf).Width + (space ? spaceWidth : 0);
+					float wordWidth = word.GetSizeF((int)maxW, tf).Width + (space ? spaceWidth : 0);
+					lineWidth += wordWidth;
 					if (lineWidth > maxW)
 					{
 						textHeight += lineHeight;
+						if (lineWidth > longestLine) longestLine = lineWidth - wordWidth;
 						lineWidth = word.GetSizeF((int)maxW, tf).Width;
 					}
 					space = false;
 				}
 			}
-			if (lineWidth > 0) textHeight += lineHeight;
-			return textHeight;
+			if (lineWidth > 0)
+			{
+				textHeight += lineHeight;
+				if (lineWidth > longestLine) longestLine = lineWidth;
+			}
+
+			// Add the end of the last line that was culled
+			textHeight += (1 - lineSpacing) * lineHeight * lineSpacing;
+			return new SizeF(longestLine, textHeight);
 		}
 
-		/// <summary>
-		/// For use when words of varying styles need to be drawn in a cohesive paragraph.
-		/// Meant to be used in a chain with other text that will share the same Graphics object.
-		/// </summary>
-		/// <param name="words">each word to be drawn</param>
-		/// <param name="g">the Graphics object used to draw</param>
-		/// <param name="sf">the StringFormat used to draw the words</param>
-		/// <param name="maxW">max width the words are allowed to take up</param>
-		/// <param name="lineH">height each line takes up</param>
-		/// <param name="startY">the y-coordinate to start drawing at</param>
-		/// <returns>the y-coordinate drawing ended at</returns>
-		private static float DrawWordByWord(List<CardWord> words, Graphics g, TextFormatFlags tf, float maxW, float lineH, float centerX, float startY)
+		private static float DrawWordByWord(List<CardWord> words, Graphics g, TextFormatFlags tf, float maxW, float lineH, float centerX, float startY, float lineS)
 		{
 			// Set up variables we'll potentially need
 			float dlLines = float.Parse(ConfigHelper.GetConfigValue("asset", "dividingLineLines"));
@@ -780,7 +736,7 @@ namespace Villainous_Card_Generator.CardGeneration
 						textG.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
 						Color bgColor = Color.Black;
 						textG.Clear(bgColor);
-						TextRenderer.DrawText(textG, word.GetText(), word.GetTextFont(), new Rectangle(0, 0, (int)wordWidth + horizontalPadding, (int)wordHeight), word.GetTextColor(), bgColor, tf);
+						TextRenderer.DrawText(textG, word.GetText(), word.GetTextFont(), new Rectangle(0, (int)((lineH - wordHeight) * lineS / 2), (int)wordWidth + horizontalPadding, (int)wordHeight), word.GetTextColor(), bgColor, tf);
 						MiscHelper.FixTransparency(textB, word.GetTextColor(), bgColor);
 						g.DrawImage(textB, new Point((int)currentX - horizontalPadding / 2, (int)currentY));
 						currentX += wordWidth;
@@ -837,14 +793,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			return currentY;
 		}
 
-		/// <summary>
-		/// Draws the given square symbol at the given coordinates.
-		/// </summary>
-		/// <param name="symbol">the symbol to draw</param>
-		/// <param name="g">the Graphics object this will use to draw</param>
-		/// <param name="centerX">the x-coordinate of the center of the symbol</param>
-		/// <param name="centerY">the y-coordinate of the center of the symbol</param>
-		/// <param name="resizing">optional resizing factor</param>
 		private static void DrawSymbol(Image symbol, Graphics g, Color color, float centerX, float centerY, float resizing = 1.0F)
 		{
 			Bitmap b = new(symbol, new Size((int)(symbol.Width * resizing), (int)(symbol.Height * resizing)));

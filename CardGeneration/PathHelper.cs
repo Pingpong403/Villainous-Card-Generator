@@ -4,11 +4,6 @@ namespace Villainous_Card_Generator
 {
 	public static class PathHelper
 	{
-		/// <summary>
-		/// Gets the actual full path to whatever relative path you want.
-		/// </summary>
-		/// <param name="relativePath">The path relative from the parent directory.</param>
-		/// <returns>The full path from the project base directory.</returns>
 		public static string GetFullPath(string relativePath)
 		{
 			var baseDir = AppContext.BaseDirectory;
