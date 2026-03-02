@@ -12,5 +12,10 @@ Test Hero		4	This Hero has a cool Ability :)			Hero			Fate
 Jetsam	2	4		Move a Hero from Jetsam's % location to an adjacent % unlocked location.		Ally			Villain	
 
 Test A Really Long Title That Should Probably Be Broken Up Into Lines	10		Test			Effect			Villain	
-Test A Long Title %That Has Been%Broken Up Into Lines	10		Test			Effect			Villain	
+Test A Long Title%That Has Been%Broken Up Into Lines	10		Test			Effect			Villain	
 I Must Solve This%Princess Puzzle			During their turn, if another player moves an Ally, you may play I Must Solve This Princess Puzzle. Either place 1 Power from the Supply on Dominick or gain 2 Power.			Condition			Villain	
+Test Consecutive Assets			Gain1Power_ Gain2Power_ Gain3Power_			Item			Villain	
+Test Gain Power						Item			Villain	This location gains: Gain1Power_
+Test Multiple Line Breaks			This line break%behaves like this. Change it, % and you shouldn't notice a difference. %% The second part of the Ability goes down here.			Item			Villain	
+Forest of Thorns	2		Heroes must have a % Strength of 4 or more to be % played to this location. %% Discard this $Curse$ when a Hero % is played to this location.			Curse			Villain	
+Test Full Line Breaks			These lines should be %%% a whole line away. Ignore % HAHAHA % please. It is % HAHAHA % filler.			Item			Villain	

@@ -19,6 +19,7 @@ typeIsCaps:false
 typeInAbilityIsBold:true
 fontDecreaseGranularity:0.4
 lineSpacingFactor:0.8
+lineBreakLines:0.5
 abilityPaddingLines:0.5
 spaceShrink:1
 italicCharacter:*

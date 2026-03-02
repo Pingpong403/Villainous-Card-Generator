@@ -87,7 +87,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			float granularity = float.Parse(ConfigHelper.GetConfigValue("text", "fontDecreaseGranularity"));
 			float paddingLines = float.Parse(ConfigHelper.GetConfigValue("text", "abilityPaddingLines"));
 			float minFontSize = float.Parse(ConfigHelper.GetConfigValue("text", "abilityMinFontSize"));
-			float dividingLineLines = float.Parse(ConfigHelper.GetConfigValue("asset", "dividingLineLines"));
 			float actionSymbolLines = float.Parse(ConfigHelper.GetConfigValue("asset", "actionSymbolLines"));
 			float lineSpacing = float.Parse(ConfigHelper.GetConfigValue("text", "lineSpacingFactor"));
 			int abilityBottomPadding = int.Parse(ConfigHelper.GetConfigValue("card", "abilityBottomPadding"));
@@ -144,15 +143,7 @@ namespace Villainous_Card_Generator.CardGeneration
 						activateAbilityHeight += Math.Max(aaSymbolHeight, aaTextHeight);
 					}
 				}
-				gainsActionHeight = 0;
-				if (gainsAction != "")
-				{
-					gainsActionHeight = actionSymbolLines * lineHeight;
-					if (activateAbility != "" && ability != "" && activateCost == "") // Special case where we need to draw extra text
-					{
-						gainsActionHeight += lineHeight;
-					}
-				}
+				gainsActionHeight = gainsAction == "" ? 0 : MeasureWordByWord(GetCardWords(gainsAction, textColor, font, keywordsAndColors), tf, maxWidth, lineHeight, lineSpacing).Height;
 				int numPadding = (abilityHeight > 0 ? 1 : 0) + (activateAbilityHeight > 0 ? 1 : 0) + (gainsActionHeight > 0 ? 1 : 0) - 1;
 				if (numPadding < 0) numPadding = 0;
 				paddingHeight = numPadding * lineHeight * paddingLines;
@@ -168,7 +159,6 @@ namespace Villainous_Card_Generator.CardGeneration
 			}
 
 			List<CardWord> colon = GetCardWords(":", textColor, font, keywordsAndColors);
-			List<CardWord> locationGainsText = GetCardWords("\\This \\location \\gains\\:", textColor, font, keywordsAndColors);
 
 			// For resizing symbols with more complexity
 			float lineHeightRatio = lineHeight / originalLineHeight;
@@ -260,36 +250,10 @@ namespace Villainous_Card_Generator.CardGeneration
 			}
 
 			// Finally, draw the gained action
-			if (gainsAction != "" && AssetHelper.AssetExists(gainsAction, true))
+			if (gainsAction != "")
 			{
-				if (ability != "" && activateAbility != "" && activateCost == "")
-				{
-					currentY = DrawWordByWord(locationGainsText, drawing, tf, maxWidth, lineHeight, maxWidth / 2, currentY, lineSpacing);
-				}
-				string assetName = AssetHelper.GetAssetName(gainsAction, true);
-				string gainPowerAmt = AssetHelper.GainPowerAmount(assetName);
-				if (gainPowerAmt != "")
-				{
-					assetName = "GainPower";
-				}
-				string gainsSymbolPath = PathHelper.GetFullPath(Path.Combine("assets", assetName + ".png"));
-				Image gainsSymbol = Image.FromFile(gainsSymbolPath);
-				float resizing = actionSymbolLines * lineHeight / gainsSymbol.Height;
-				DrawSymbol(gainsSymbol, drawing, textColor, maxWidth / 2, currentY + actionSymbolLines * lineHeight / 2, resizing);
-
-				// If this was a Gain Power action, draw the amount to be gained
-				if (gainPowerAmt != "")
-				{
-					Font gainPowerFont = FontLoader.GetFont(
-						ConfigHelper.GetConfigValue("text", "elementFont"),
-						float.Parse(ConfigHelper.GetConfigValue("text", "costFontSize")) * resizing
-					);
-					Point gainPowerPos = new(
-						(int)(maxWidth / 2),
-						(int)(currentY + actionSymbolLines * lineHeight / 2)
-					);
-					TextRenderer.DrawText(drawing, gainPowerAmt, gainPowerFont, gainPowerPos, textColor, tf);
-				}
+				words = GetCardWords(gainsAction, textColor, font, keywordsAndColors);
+				DrawWordByWord(words, drawing, tf, maxWidth, lineHeight, maxWidth / 2, currentY, lineSpacing);
 			}
 
 			drawing.Save();
@@ -589,12 +553,14 @@ namespace Villainous_Card_Generator.CardGeneration
 
 		public static SizeF MeasureWordByWord(List<CardWord> words, TextFormatFlags tf, float maxW, float lineHeight, float lineSpacing)
 		{
+			float lineBreakLines = float.Parse(ConfigHelper.GetConfigValue("text", "lineBreakLines"));
 			float actionSymbolLines = float.Parse(ConfigHelper.GetConfigValue("asset", "actionSymbolLines"));
 			float dividingLineLines = float.Parse(ConfigHelper.GetConfigValue("asset", "dividingLineLines"));
 
 			float longestLine = 0;
 			float textHeight = 0;
 			float lineWidth = 0;
+			int consecutiveLineBreakCount = 0;
 			bool space = false;
 			float spaceWidth = 0;
 			foreach (CardWord word in words)
@@ -602,6 +568,7 @@ namespace Villainous_Card_Generator.CardGeneration
 				// Keywords: add the amount of vertical space they take up
 				if (AssetHelper.AssetExists(word.GetText()))
 				{
+					consecutiveLineBreakCount = 0;
 					if (lineWidth > 0) // Check if some words have already been added to line
 					{
 						textHeight += lineHeight;
@@ -615,19 +582,35 @@ namespace Villainous_Card_Generator.CardGeneration
 				// Spaces: set flag
 				else if (word.GetText() == " ")
 				{
+					consecutiveLineBreakCount = 0;
 					space = true;
 					spaceWidth = word.GetSizeF((int)maxW, tf).Width;
 				}
 				// Newlines: add a line
 				else if (word.GetText() == "\n")
 				{
-					textHeight += lineHeight;
+					consecutiveLineBreakCount++;
+					switch (consecutiveLineBreakCount % 3)
+					{
+						case 1:
+							textHeight += lineHeight;
+							break;
+						case 2:
+							textHeight += lineHeight * lineBreakLines;
+							break;
+						case 0:
+							textHeight += lineHeight * (1.0F - lineBreakLines);
+							break;
+						default:
+							break;
+					}
 					if (lineWidth > longestLine) longestLine = lineWidth;
 					lineWidth = 0.001F; // Completely ignore the text that was already built up
 				}
 				// Generic case: add word's width (+ space), check if over
 				else
 				{
+					consecutiveLineBreakCount = 0;
 					float wordWidth = word.GetSizeF((int)maxW, tf).Width + (space ? spaceWidth : 0);
 					lineWidth += wordWidth;
 					if (lineWidth > maxW)
@@ -653,6 +636,7 @@ namespace Villainous_Card_Generator.CardGeneration
 		private static float DrawWordByWord(List<CardWord> words, Graphics g, TextFormatFlags tf, float maxW, float lineH, float centerX, float startY, float lineS)
 		{
 			// Set up variables we'll potentially need
+			float lineBreakLines = float.Parse(ConfigHelper.GetConfigValue("text", "lineBreakLines"));
 			float dlLines = float.Parse(ConfigHelper.GetConfigValue("asset", "dividingLineLines"));
 			float asLines = float.Parse(ConfigHelper.GetConfigValue("asset", "actionSymbolLines"));
 			int horizontalPadding = int.Parse(ConfigHelper.GetConfigValue("text", "wordHorizontalPadding"));
@@ -663,12 +647,16 @@ namespace Villainous_Card_Generator.CardGeneration
 			int iCheck = 0;
 			int iDraw = 0;
 			float lineLength;
+			bool skipLine;
+			bool countLineBreaks;
 			bool drawAsset = false;
 			bool endOfText = false;
 			while (!endOfText)
 			{
 				// First, find the length of this line
 				lineLength = 0;
+				skipLine = false;
+				countLineBreaks = false;
 				try
 				{
 					bool endOfLine = false;
@@ -680,21 +668,31 @@ namespace Villainous_Card_Generator.CardGeneration
 						// Measure each word
 						currentWordWidth = words[iCheck].GetSizeF(maxW, tf).Width;
 
-						if (words[iCheck].GetText() == " " && lineLength > 0)
+						if (words[iCheck].GetText() == " ")
 						{
-							if (lineLength == 0) iDraw++;
-							space = true;
-							spaceWidth = words[iCheck].GetSizeF(maxW, tf).Width;
+							if (lineLength == 0)
+							{
+								space = true;
+								spaceWidth = 0;
+								iDraw++;
+							}
+							else
+							{
+								space = true;
+								spaceWidth = words[iCheck].GetSizeF(maxW, tf).Width;
+							}
 							iCheck++;
 						}
 						else if (AssetHelper.AssetExists(words[iCheck].GetText()))
 						{
 							endOfLine = true;
+							if (lineLength == 0) skipLine = true;
 							drawAsset = true;
 						}
 						else if (words[iCheck].GetText() == "\n")
 						{
 							endOfLine = true;
+							countLineBreaks = true;
 							iCheck++;
 						}
 						else if (lineLength + currentWordWidth + (space ? spaceWidth : 0) > maxW)
@@ -725,8 +723,8 @@ namespace Villainous_Card_Generator.CardGeneration
 					CardWord word = words[i];
 					if (word.GetText() != "\n")
 					{
-						float wordWidth = words[iDraw].GetSizeF((int)maxW, tf).Width;
-						float wordHeight = words[iDraw].GetSizeF((int)maxW, tf).Height;
+						float wordWidth = (word.GetText() != " " || currentX > centerX - lineLength / 2) ? word.GetSizeF((int)maxW, tf).Width : 0;
+						float wordHeight = word.GetSizeF((int)maxW, tf).Height;
 						Bitmap textB = new((int)wordWidth + horizontalPadding, (int)wordHeight);
 						Graphics textG = Graphics.FromImage(textB);
 						textG.CompositingQuality = CompositingQuality.HighQuality;
@@ -737,14 +735,41 @@ namespace Villainous_Card_Generator.CardGeneration
 						Color bgColor = Color.Black;
 						textG.Clear(bgColor);
 						TextRenderer.DrawText(textG, word.GetText(), word.GetTextFont(), new Rectangle(0, (int)((lineH - wordHeight) * lineS / 2), (int)wordWidth + horizontalPadding, (int)wordHeight), word.GetTextColor(), bgColor, tf);
-						MiscHelper.FixTransparency(textB, word.GetTextColor(), bgColor);
+						MiscHelper.Mask(textB, word.GetTextColor(), bgColor);
 						g.DrawImage(textB, new Point((int)currentX - horizontalPadding / 2, (int)currentY));
 						currentX += wordWidth;
+						iDraw++;
 					}
-					iDraw++;
 				}
 				// Move the register down
-				currentY += lineH;
+				if (!skipLine)
+				{
+					if (countLineBreaks)
+					{
+						int consecutiveLineBreakCount = 0;
+						while (words[iDraw].GetText() == "\n")
+						{
+							consecutiveLineBreakCount++;
+							switch (consecutiveLineBreakCount % 3)
+							{
+								case 1:
+									currentY += lineH;
+									break;
+								case 2:
+									currentY += lineH * lineBreakLines;
+									break;
+								case 0:
+									currentY += lineH * (1.0F - lineBreakLines);
+									break;
+								default:
+									break;
+							}
+							iDraw++;
+						}
+						iCheck = iDraw;
+					}
+					else currentY += lineH;
+				}
 				// Draw the asset that is up to draw
 				if (drawAsset)
 				{
@@ -768,7 +793,7 @@ namespace Villainous_Card_Generator.CardGeneration
 							float.Parse(ConfigHelper.GetConfigValue("text", "costFontSize")) * resizing
 						);
 						Point gainPowerPos = new(
-							(int)(maxW / 2),
+							(int)maxW,
 							(int)(currentY + asLines * lineH / 2)
 						);
 						TextRenderer.DrawText(g, gainPowerAmt, gainPowerFont, gainPowerPos, color, tf);
@@ -777,17 +802,6 @@ namespace Villainous_Card_Generator.CardGeneration
 					iCheck++;
 					iDraw++;
 					drawAsset = false;
-				}
-				// Eat through whitespace
-				bool ignoreSpaces = true;
-				while (ignoreSpaces)
-				{
-					if (iDraw < words.Count)
-					{
-						if (words[iDraw].GetText() == " ") iDraw++;
-						else ignoreSpaces = false;
-					}
-					else ignoreSpaces = false;
 				}
 			}
 			return currentY;
