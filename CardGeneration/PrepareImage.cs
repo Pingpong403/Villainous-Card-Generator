@@ -31,7 +31,8 @@ namespace Villainous_Card_Generator.CardGeneration
 				relativePath = Path.Combine("assets", "black_bg.png");
 				fullPath = Structuring.GetFullPath(relativePath);
 			}
-			using Image img = Image.FromFile(fullPath);
+			bool makeGrayscale = ValueFetching.GetSettingsValue("Card", "convertToGrayscale") == "true";
+			using Bitmap img = makeGrayscale ? ImageManipulation.MakeGrayscale((Bitmap)Image.FromFile(fullPath)) : (Bitmap)Image.FromFile(fullPath);
 
 			float targetHeight = float.Parse(ValueFetching.GetConfigValue("card", "imageAreaHeight"), CultureInfo.InvariantCulture);
 			float ratio = targetHeight / img.Height;

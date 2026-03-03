@@ -115,6 +115,7 @@ namespace Villainous_Card_Generator.CardGeneration
 			int abilityBottomPadding = int.Parse(ValueFetching.GetConfigValue("card", "abilityBottomPadding"));
 			int sideAAMaxW = int.Parse(ValueFetching.GetConfigValue("card", "sideActivateAbilityMaxWidth"));
 			int sideAACenterX = int.Parse(ValueFetching.GetConfigValue("card", "sideActivateAbilityCenterX"));
+			bool useAltAssets = ValueFetching.GetSettingsValue("Card", "useAlternateAssets") == "true";
 
 			// Set the textformatflags for center alignment and no trimming
 			TextFormatFlags tf = TextFormatFlags.VerticalCenter|
@@ -202,7 +203,9 @@ namespace Villainous_Card_Generator.CardGeneration
 			if (activateAbility != "" || activateCost != "")
 			{
 				// Symbol
-				string activateSymbolPath = Structuring.GetFullPath(Path.Combine("assets", "Activate.png"));
+				string assetName = "Activate";
+				if (useAltAssets) assetName += ValueFetching.GetConfigValue("asset", "alternateDesignation");
+				string activateSymbolPath = Structuring.GetFullPath(Path.Combine("assets", assetName + Structuring.FindExtension("assets", assetName)));
 				Image activateSymbol = Image.FromFile(activateSymbolPath);
 				float resizing = actionSymbolLines * lineHeight / activateSymbol.Height;
 				float symbolCenterX = maxWidth / 2;
@@ -528,6 +531,7 @@ namespace Villainous_Card_Generator.CardGeneration
 			float dlLines = float.Parse(ValueFetching.GetConfigValue("asset", "dividingLineLines"));
 			float asLines = float.Parse(ValueFetching.GetConfigValue("asset", "actionSymbolLines"));
 			int horizontalPadding = int.Parse(ValueFetching.GetConfigValue("text", "wordHorizontalPadding"));
+			bool useAltAssets = ValueFetching.GetSettingsValue("Card", "useAlternateAssets") == "true";
 			Color color = ColorTranslator.FromHtml("#" + ValueFetching.GetConfigValue("color", "fontColor"));
 
 			// Draw text word by word
@@ -667,6 +671,7 @@ namespace Villainous_Card_Generator.CardGeneration
 					{
 						assetName = "GainPower";
 					}
+					if (useAltAssets) assetName += ValueFetching.GetConfigValue("asset", "alternateDesignation");
 					string gainsSymbolPath = Structuring.GetFullPath(Path.Combine("assets", assetName + Structuring.FindExtension("assets", assetName)));
 					Image asset = Image.FromFile(gainsSymbolPath);
 					float resizing = string.Equals(assetName, "DividingLine") ? 1.0F : asLines * lineHeight / asset.Height;
