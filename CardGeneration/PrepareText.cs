@@ -674,8 +674,8 @@ namespace Villainous_Card_Generator.CardGeneration
 					if (useAltAssets) assetName += ValueFetching.GetConfigValue("asset", "alternateDesignation");
 					string gainsSymbolPath = Structuring.GetFullPath(Path.Combine("assets", assetName + Structuring.FindExtension("assets", assetName)));
 					Image asset = Image.FromFile(gainsSymbolPath);
-					float resizing = string.Equals(assetName, "DividingLine") ? 1.0F : asLines * lineHeight / asset.Height;
-					float yOffset = string.Equals(assetName, "DividingLine") ? dlLines * lineHeight / 2 : asLines * lineHeight / 2;
+					float resizing = string.Equals(assetName, "DividingLine") || string.Equals(assetName, "DividingLine" + ValueFetching.GetConfigValue("asset", "alternateDesignation")) ? 1.0F : asLines * lineHeight / asset.Height;
+					float yOffset = string.Equals(assetName, "DividingLine") || string.Equals(assetName, "DividingLine" + ValueFetching.GetConfigValue("asset", "alternateDesignation")) ? dlLines * lineHeight / 2 : asLines * lineHeight / 2;
 					DrawSymbol(asset, g, color, maxWidth / 2, currentY + yOffset, resizing);
 
 					// If this was a Gain Power action, draw the amount to be gained
