@@ -8,6 +8,10 @@
 # Accepts: true, false. Default: false
 exportByDeck:
 
+# The resolution that you want your cards to be output with
+# Accepts: any percentage from 25% to 100%. Default: 100%
+outputResolution:
+
 # Whether or not you want the generator to only generate cards that have been changed.
 # Accepts: true, false. Default: false
 trackChanges:

@@ -1,0 +1,248 @@
+using System.Collections;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using Microsoft.VisualBasic.Logging;
+
+namespace Villainous_Card_Generator.CardGeneration
+{
+	public static class Logging
+	{
+		public static List<string> GetCardsToSkip()
+		{
+			string allData = "";
+			string logFilePath = Structuring.GetFullPath(Path.Combine("logs", "all-data.json"));
+
+			if (!File.Exists(logFilePath)) 
+			{
+				File.Create(logFilePath);
+			}
+			
+			string? line;
+			try
+			{
+				// Pass the file path to the StreamReader constructor
+				StreamReader sr = new(logFilePath);
+
+				// Read the first line of text
+				line = sr.ReadLine();
+
+				//Continue to read until you reach end of file
+				while (line != null)
+				{
+					allData += line;
+					line = sr.ReadLine();
+				}
+				//close the file
+				sr.Close();
+			}
+			catch(Exception e)
+			{
+				Console.WriteLine("Exception: " + e.Message);
+			}
+
+			bool getAllCards = false;
+			ProjectData? deserialized = JsonSerializer.Deserialize<ProjectData>(allData);
+
+			foreach (var settingCategory in deserialized.Settings)
+			{
+				foreach (var setting in settingCategory.Value)
+				{
+					if (ValueFetching.GetSettingsValue(settingCategory.Key, setting.Key) != setting.Value) getAllCards = true;
+				}
+			}
+
+			foreach (var configCategory in deserialized.Config)
+			{
+				foreach (var configLabel in configCategory.Value)
+				{
+					if (ValueFetching.GetConfigValue(configCategory.Key, configLabel.Key) != configLabel.Value) getAllCards = true;
+				}
+			}
+
+			foreach (var keyword in deserialized.Keywords)
+			{
+				Dictionary<string, string> keywordsAndColors = ValueFetching.GetColorMapping();
+				if (keywordsAndColors[keyword.Key] != keyword.Value) getAllCards = true;
+			}
+
+			// Get current card data
+			Dictionary<string, Card> cards = [];
+			foreach (string card in ValueFetching.GetTextFilesLines("Cards"))
+			{
+				string[] cardSplit = card.Split("\t");
+				cards[cardSplit[0]] = new(
+					cardSplit[1], // cost
+					cardSplit[2], // strength
+					$"{cardSplit[3]}@{cardSplit[4]}@{cardSplit[5]}@{cardSplit[10]}", // ability@activate ability@active cost@gains action
+					cardSplit[6], // type
+					cardSplit[7], // top right
+					cardSplit[8], // bottom right
+					cardSplit[9]  // deck
+				)
+				{
+					hasImage = Structuring.ImageExists(cardSplit[0]) ? "true" : "false"
+				};
+			}
+
+			foreach (var card in deserialized.Cards)
+			{
+				bool removeCard = false;
+				foreach (var field in card.Value)
+				{
+					if (getAllCards) removeCard = true;
+					else
+					{
+						switch (field.Key)
+						{
+							case "Cost":
+								if (cards[card.Key].Cost != field.Value) removeCard = true;
+								break;
+							case "Strength":
+								if (cards[card.Key].Strength != field.Value) removeCard = true;
+								break;
+							case "Ability":
+								if (cards[card.Key].Ability != field.Value) removeCard = true;
+								break;
+							case "Type":
+								if (cards[card.Key].Type != field.Value) removeCard = true;
+								break;
+							case "TopRight":
+								if (cards[card.Key].TopRight != field.Value) removeCard = true;
+								break;
+							case "BottomRight":
+								if (cards[card.Key].BottomRight != field.Value) removeCard = true;
+								break;
+							case "Deck":
+								if (cards[card.Key].Deck != field.Value) removeCard = true;
+								break;
+							case "hasImage":
+								if (cards[card.Key].hasImage != field.Value) removeCard = true;
+								break;
+							default:
+								break;
+						}
+					}
+				}
+				if (removeCard) cards.Remove(card.Key);
+			}
+			List<string> cardsToSkip = [];
+			foreach (var card in cards)
+			{
+				cardsToSkip.Add(card.Key);
+			}
+			return cardsToSkip;
+		}
+
+		/// <summary>
+		/// Writes every setting, config value, keyword variation, and card to the log file.
+		/// </summary>
+		public static void LogThisVersion()
+		{
+			// First find and delete the current log file
+			string logFilePath = Structuring.GetFullPath(Path.Combine("logs", "all-data.json"));
+			if (File.Exists(logFilePath)) File.Delete(logFilePath);
+
+			// Use StreamWriter to write to the log file
+			using StreamWriter sw = File.CreateText(logFilePath);
+
+			sw.WriteLine("{");
+			// Settings data
+			sw.WriteLine("\"Settings\": {");
+			sw.WriteLine(GetSettingsData());
+			sw.WriteLine("},");
+
+			// Config data
+			sw.WriteLine("\"Config\": {");
+			sw.WriteLine(GetConfigData());
+			sw.WriteLine("},");
+
+			// Keyword data
+			sw.WriteLine("\"Keywords\": ");
+			sw.WriteLine(GetKeywordData());
+			sw.WriteLine(",");
+
+			// Card data
+			sw.WriteLine("\"Cards\": {");
+			sw.WriteLine(GetCardData());
+			sw.WriteLine("}");
+			sw.WriteLine("}");
+		}
+
+		private static string GetSettingsData()
+		{
+			Dictionary<string, string> cardSettings = ValueFetching.GetAllSettings("Card");
+			Dictionary<string, string> dataSettings = ValueFetching.GetAllSettings("Data");
+			Dictionary<string, string> textSettings = ValueFetching.GetAllSettings("Text");
+			return "\"Card\": " + JsonSerializer.Serialize(cardSettings) + "," + 
+				   "\"Data\": " + JsonSerializer.Serialize(dataSettings) + "," + 
+				   "\"Text\": " + JsonSerializer.Serialize(textSettings);
+		}
+
+		private static string GetConfigData()
+		{
+			Dictionary<string, string> assetConfig = ValueFetching.GetAllConfigValues("asset");
+			Dictionary<string, string> cardConfig = ValueFetching.GetAllConfigValues("card");
+			Dictionary<string, string> colorConfig = ValueFetching.GetAllConfigValues("color");
+			Dictionary<string, string> layoutConfig = ValueFetching.GetAllConfigValues("layout");
+			Dictionary<string, string> settingsConfig = ValueFetching.GetAllConfigValues("settings");
+			Dictionary<string, string> textConfig = ValueFetching.GetAllConfigValues("text");
+			return "\"asset\": " + JsonSerializer.Serialize(assetConfig) + "," + 
+				   "\"card\": " + JsonSerializer.Serialize(cardConfig) + "," + 
+				   "\"color\": " + JsonSerializer.Serialize(colorConfig) + "," + 
+				   "\"layout\": " + JsonSerializer.Serialize(layoutConfig) + "," + 
+				   "\"settings\": " + JsonSerializer.Serialize(settingsConfig) + "," + 
+				   "\"text\": " + JsonSerializer.Serialize(textConfig);
+		}
+
+		private static string GetKeywordData()
+		{
+			Dictionary<string, string> keywordsAndColors = ValueFetching.GetColorMapping();
+			return JsonSerializer.Serialize(keywordsAndColors);
+		}
+
+		private static string GetCardData()
+		{
+			string allCardData = "";
+			List<string> cards = ValueFetching.GetTextFilesLines("Cards");
+			foreach (string card in cards)
+			{
+				string[] cardData = card.Split('\t');
+				Card cardObject = new(
+					cardData[1], // cost
+					cardData[2], // strength
+					$"{cardData[3]}@{cardData[4]}@{cardData[5]}@{cardData[10]}", // ability@activate ability@active cost@gains action
+					cardData[6], // type
+					cardData[7], // top right
+					cardData[8], // bottom right
+					cardData[9]  // deck
+				);
+				cardObject.hasImage = Structuring.ImageExists(cardData[0]) ? "true" : "false";
+
+				allCardData += $"\"{cardData[0]}\": {JsonSerializer.Serialize(cardObject)},";
+			}
+			return allCardData[0..^1];
+		}
+	}
+
+	class ProjectData
+	{
+		public Dictionary<string, Dictionary<string, string>> Settings { get; set; }
+		public Dictionary<string, Dictionary<string, string>> Config { get; set; }
+		public Dictionary<string, string> Keywords { get; set; }
+		public Dictionary<string, Dictionary<string, string>> Cards { get; set; }
+	}
+
+	class Card(string cost, string strength, string ability, string type, string topRight, string bottomRight, string deck)
+	{
+		public string Cost { get; } = cost;
+		public string Strength { get; } = strength;
+		public string Ability { get; } = ability;
+		public string Type { get; } = type;
+		public string TopRight { get; } = topRight;
+		public string BottomRight { get; } = bottomRight;
+		public string Deck { get; } = deck;
+		public string hasImage = "false";
+	}
+}
