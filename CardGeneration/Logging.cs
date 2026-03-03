@@ -76,18 +76,21 @@ namespace Villainous_Card_Generator.CardGeneration
 				foreach (string card in ValueFetching.GetTextFilesLines("Cards"))
 				{
 					string[] cardSplit = card.Split("\t");
-					cards[cardSplit[0]] = new(
-						cardSplit[1], // cost
-						cardSplit[2], // strength
-						$"{cardSplit[3]}@{cardSplit[4]}@{cardSplit[5]}@{cardSplit[10]}", // ability@activate ability@active cost@gains action
-						cardSplit[6], // type
-						cardSplit[7], // top right
-						cardSplit[8], // bottom right
-						cardSplit[9]  // deck
-					)
+					if (cardSplit.Length == 11)
 					{
-						hasImage = Structuring.ImageExists(cardSplit[0]) ? "true" : "false"
-					};
+						cards[cardSplit[0]] = new(
+							cardSplit[1], // cost
+							cardSplit[2], // strength
+							$"{cardSplit[3]}@{cardSplit[4]}@{cardSplit[5]}@{cardSplit[10]}", // ability@activate ability@active cost@gains action
+							cardSplit[6], // type
+							cardSplit[7], // top right
+							cardSplit[8], // bottom right
+							cardSplit[9]  // deck
+						)
+						{
+							hasImage = Structuring.ImageExists(cardSplit[0]) ? "true" : "false"
+						};
+					}
 				}
 
 				foreach (var card in deserialized.Cards)
@@ -105,28 +108,36 @@ namespace Villainous_Card_Generator.CardGeneration
 								switch (field.Key)
 								{
 									case "Cost":
-										if (cards[card.Key].Cost != field.Value) includeCard = true;
+										if (cards.TryGetValue(card.Key, out var val1))
+											if (val1.Cost != field.Value) includeCard = true;
 										break;
 									case "Strength":
-										if (cards[card.Key].Strength != field.Value) includeCard = true;
+										if (cards.TryGetValue(card.Key, out var val2))
+											if (val2.Strength != field.Value) includeCard = true;
 										break;
 									case "Ability":
-										if (cards[card.Key].Ability != field.Value) includeCard = true;
+										if (cards.TryGetValue(card.Key, out var val3))
+											if (val3.Ability != field.Value) includeCard = true;
 										break;
 									case "Type":
-										if (cards[card.Key].Type != field.Value) includeCard = true;
+										if (cards.TryGetValue(card.Key, out var val4))
+											if (val4.Type != field.Value) includeCard = true;
 										break;
 									case "TopRight":
-										if (cards[card.Key].TopRight != field.Value) includeCard = true;
+										if (cards.TryGetValue(card.Key, out var val5))
+											if (val5.TopRight != field.Value) includeCard = true;
 										break;
 									case "BottomRight":
-										if (cards[card.Key].BottomRight != field.Value) includeCard = true;
+										if (cards.TryGetValue(card.Key, out var val6))
+											if (val6.BottomRight != field.Value) includeCard = true;
 										break;
 									case "Deck":
-										if (cards[card.Key].Deck != field.Value) includeCard = true;
+										if (cards.TryGetValue(card.Key, out var val7))
+											if (val7.Deck != field.Value) includeCard = true;
 										break;
 									case "hasImage":
-										if (cards[card.Key].hasImage != field.Value) includeCard = true;
+										if (cards.TryGetValue(card.Key, out var val8))
+											if (val8.hasImage != field.Value) includeCard = true;
 										break;
 									default:
 										break;
@@ -240,18 +251,21 @@ namespace Villainous_Card_Generator.CardGeneration
 			foreach (string card in cards)
 			{
 				string[] cardData = card.Split('\t');
-				Card cardObject = new(
-					cardData[1], // cost
-					cardData[2], // strength
-					$"{cardData[3]}@{cardData[4]}@{cardData[5]}@{cardData[10]}", // ability@activate ability@active cost@gains action
-					cardData[6], // type
-					cardData[7], // top right
-					cardData[8], // bottom right
-					cardData[9]  // deck
-				);
-				cardObject.hasImage = Structuring.ImageExists(cardData[0]) ? "true" : "false";
+				if (cardData.Length == 11)
+				{
+					Card cardObject = new(
+						cardData[1], // cost
+						cardData[2], // strength
+						$"{cardData[3]}@{cardData[4]}@{cardData[5]}@{cardData[10]}", // ability@activate ability@active cost@gains action
+						cardData[6], // type
+						cardData[7], // top right
+						cardData[8], // bottom right
+						cardData[9]  // deck
+					);
+					cardObject.hasImage = Structuring.ImageExists(cardData[0]) ? "true" : "false";
 
-				allCardData += $"\"{cardData[0]}\": {JsonSerializer.Serialize(cardObject)},";
+					allCardData += $"\"{cardData[0]}\": {JsonSerializer.Serialize(cardObject)},";
+				}
 			}
 			if (allCardData == "") return "";
 			return allCardData[0..^1];
