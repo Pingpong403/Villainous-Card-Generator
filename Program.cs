@@ -62,7 +62,7 @@ class Program
             List<string> cardsToSkip = [];
             if (trackChanges) cardsToSkip = Logging.GetCardsToSkip();
             else File.Delete(Structuring.GetFullPath(Path.Combine("logs", "all-data.json")));
-            
+
             // Initial cleanup
             CleanIntermediaries();
 
@@ -74,6 +74,8 @@ class Program
             // Go through each line of Cards.txt and build cards
             List<string> cardData = ValueFetching.GetTextFilesLines("Cards");
 			if (cardData.Count == 0) Console.WriteLine("No cards generated.");
+
+            int badCards = 0;
             foreach (string card in cardData)
             {
                 // Title, Cost, Strength, On Play Ability, Activate Ability, Activate Cost Text, Type, Top Right, Bottom Right, Deck Name, Gains Action Symbol
@@ -112,8 +114,13 @@ class Program
                         CombineImages(title, deck);
                         CleanIntermediaries();
                     }
+                    else if (title == "" ||
+                            (ability == "" && activateAbility == "" && activateCost == "" && gainsAction == "") ||
+                             type == "" ) badCards += 1;
                 }
+                else badCards += 1;
             }
+            if (badCards > 0) Console.WriteLine($"{badCards} card{(badCards > 1 ? "s" : "")} skipped due to improper formatting or missing fields.");
 
             // Final cleanup
             CleanIntermediaries();

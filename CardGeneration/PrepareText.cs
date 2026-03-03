@@ -764,7 +764,8 @@ namespace Villainous_Card_Generator.CardGeneration
 					if (builtWord != "")
 					{
 						bool isKeyword = keywordData != null && keywordData.TryGetValue(builtWord, out string? value);
-						bool boldWord = isKeyword && !boldOpen || !isKeyword && boldOpen;
+						bool boldWord = (isKeyword && (isType || typeInAbilityIsBold)) && !boldOpen ||
+									   !(isKeyword && (isType || typeInAbilityIsBold)) && boldOpen;
 						CardWord word = new(
 							builtWord,
 							isKeyword && !ignoreFormatting ? Color.FromArgb(Convert.ToInt32("ff" + keywordData[builtWord], 16)) : defaultColor,
@@ -806,7 +807,8 @@ namespace Villainous_Card_Generator.CardGeneration
 						if (builtWord != "")
 						{
 							bool isKeyword = keywordData != null && keywordData.TryGetValue(builtWord, out string? value);
-							bool boldWord = isKeyword && !boldOpen || !isKeyword && boldOpen;
+							bool boldWord = (isKeyword && (isType || typeInAbilityIsBold)) && !boldOpen ||
+										   !(isKeyword && (isType || typeInAbilityIsBold)) && boldOpen;
 							CardWord word = new(
 								builtWord,
 								isKeyword && !ignoreFormatting ? Color.FromArgb(Convert.ToInt32("ff" + keywordData[builtWord], 16)) : defaultColor,
@@ -824,7 +826,8 @@ namespace Villainous_Card_Generator.CardGeneration
 						if (builtWord != "")
 						{
 							bool isKeyword = keywordData != null && keywordData.TryGetValue(builtWord, out string? value);
-							bool boldWord = isKeyword && boldOpen || !isKeyword && !boldOpen;
+							bool boldWord = (isKeyword && (isType || typeInAbilityIsBold)) && !boldOpen ||
+										   !(isKeyword && (isType || typeInAbilityIsBold)) && boldOpen;
 							CardWord word = new(
 								builtWord,
 								isKeyword && !ignoreFormatting ? Color.FromArgb(Convert.ToInt32("ff" + keywordData[builtWord], 16)) : defaultColor,
@@ -845,7 +848,8 @@ namespace Villainous_Card_Generator.CardGeneration
 						if (builtWord != "")
 						{
 							bool isKeyword = keywordData != null && keywordData.TryGetValue(builtWord, out string? value);
-							bool boldWord = isKeyword && !boldOpen || !isKeyword && boldOpen;
+							bool boldWord = (isKeyword && (isType || typeInAbilityIsBold)) && !boldOpen ||
+									   	   !(isKeyword && (isType || typeInAbilityIsBold)) && boldOpen;
 							CardWord word = new(
 								builtWord,
 								isKeyword && !ignoreFormatting ? Color.FromArgb(Convert.ToInt32("ff" + keywordData[builtWord], 16)) : defaultColor,
@@ -864,7 +868,8 @@ namespace Villainous_Card_Generator.CardGeneration
 						if (TextManipulation.IsPunctuation(Convert.ToString(letter)) && builtWord != "")
 						{
 							bool isKeyword = keywordData != null && keywordData.TryGetValue(builtWord, out string? value);
-							bool boldWord = isKeyword && !boldOpen || !isKeyword && boldOpen;
+							bool boldWord = (isKeyword && (isType || typeInAbilityIsBold)) && !boldOpen ||
+										   !(isKeyword && (isType || typeInAbilityIsBold)) && boldOpen;
 							CardWord word = new(
 								builtWord,
 								isKeyword && !ignoreFormatting ? Color.FromArgb(Convert.ToInt32("ff" + keywordData[builtWord], 16)) : defaultColor,
@@ -888,7 +893,8 @@ namespace Villainous_Card_Generator.CardGeneration
 			if (builtWord != "")
 			{
 				bool isKeyword = keywordData != null && keywordData.TryGetValue(builtWord, out string? value);
-				bool boldWord = isKeyword && !boldOpen || !isKeyword && boldOpen;
+				bool boldWord = (isKeyword && (isType || typeInAbilityIsBold)) && !boldOpen ||
+							   !(isKeyword && (isType || typeInAbilityIsBold)) && boldOpen;
 				CardWord word = new(
 					builtWord,
 					isKeyword && !ignoreFormatting ? Color.FromArgb(Convert.ToInt32("ff" + keywordData[builtWord], 16)) : defaultColor,

@@ -16,7 +16,8 @@ namespace Villainous_Card_Generator.CardGeneration
 
 			if (!File.Exists(logFilePath)) 
 			{
-				File.Create(logFilePath);
+				var logFile = File.Create(logFilePath);
+				logFile.Close();
 			}
 			
 			string? line;
@@ -41,98 +42,112 @@ namespace Villainous_Card_Generator.CardGeneration
 			{
 				Console.WriteLine("Exception: " + e.Message);
 			}
+			line = "";
 
-			bool getAllCards = false;
-			ProjectData? deserialized = JsonSerializer.Deserialize<ProjectData>(allData);
-
-			foreach (var settingCategory in deserialized.Settings)
+			try
 			{
-				foreach (var setting in settingCategory.Value)
+				bool getAllCards = false;
+				ProjectData? deserialized = JsonSerializer.Deserialize<ProjectData>(allData);
+
+				foreach (var settingCategory in deserialized.Settings)
 				{
-					if (ValueFetching.GetSettingsValue(settingCategory.Key, setting.Key) != setting.Value) getAllCards = true;
-				}
-			}
-
-			foreach (var configCategory in deserialized.Config)
-			{
-				foreach (var configLabel in configCategory.Value)
-				{
-					if (ValueFetching.GetConfigValue(configCategory.Key, configLabel.Key) != configLabel.Value) getAllCards = true;
-				}
-			}
-
-			foreach (var keyword in deserialized.Keywords)
-			{
-				Dictionary<string, string> keywordsAndColors = ValueFetching.GetColorMapping();
-				if (keywordsAndColors[keyword.Key] != keyword.Value) getAllCards = true;
-			}
-
-			// Get current card data
-			Dictionary<string, Card> cards = [];
-			foreach (string card in ValueFetching.GetTextFilesLines("Cards"))
-			{
-				string[] cardSplit = card.Split("\t");
-				cards[cardSplit[0]] = new(
-					cardSplit[1], // cost
-					cardSplit[2], // strength
-					$"{cardSplit[3]}@{cardSplit[4]}@{cardSplit[5]}@{cardSplit[10]}", // ability@activate ability@active cost@gains action
-					cardSplit[6], // type
-					cardSplit[7], // top right
-					cardSplit[8], // bottom right
-					cardSplit[9]  // deck
-				)
-				{
-					hasImage = Structuring.ImageExists(cardSplit[0]) ? "true" : "false"
-				};
-			}
-
-			foreach (var card in deserialized.Cards)
-			{
-				bool removeCard = false;
-				foreach (var field in card.Value)
-				{
-					if (getAllCards) removeCard = true;
-					else
+					foreach (var setting in settingCategory.Value)
 					{
-						switch (field.Key)
-						{
-							case "Cost":
-								if (cards[card.Key].Cost != field.Value) removeCard = true;
-								break;
-							case "Strength":
-								if (cards[card.Key].Strength != field.Value) removeCard = true;
-								break;
-							case "Ability":
-								if (cards[card.Key].Ability != field.Value) removeCard = true;
-								break;
-							case "Type":
-								if (cards[card.Key].Type != field.Value) removeCard = true;
-								break;
-							case "TopRight":
-								if (cards[card.Key].TopRight != field.Value) removeCard = true;
-								break;
-							case "BottomRight":
-								if (cards[card.Key].BottomRight != field.Value) removeCard = true;
-								break;
-							case "Deck":
-								if (cards[card.Key].Deck != field.Value) removeCard = true;
-								break;
-							case "hasImage":
-								if (cards[card.Key].hasImage != field.Value) removeCard = true;
-								break;
-							default:
-								break;
-						}
+						if (ValueFetching.GetSettingsValue(settingCategory.Key, setting.Key) != setting.Value) getAllCards = true;
 					}
 				}
-				if (removeCard) cards.Remove(card.Key);
+
+				foreach (var configCategory in deserialized.Config)
+				{
+					foreach (var configLabel in configCategory.Value)
+					{
+						if (ValueFetching.GetConfigValue(configCategory.Key, configLabel.Key) != configLabel.Value) getAllCards = true;
+					}
+				}
+
+				foreach (var keyword in deserialized.Keywords)
+				{
+					Dictionary<string, string> keywordsAndColors = ValueFetching.GetColorMapping();
+					if (keywordsAndColors[keyword.Key] != keyword.Value) getAllCards = true;
+				}
+
+				// Get current card data
+				Dictionary<string, Card> cards = [];
+				foreach (string card in ValueFetching.GetTextFilesLines("Cards"))
+				{
+					string[] cardSplit = card.Split("\t");
+					cards[cardSplit[0]] = new(
+						cardSplit[1], // cost
+						cardSplit[2], // strength
+						$"{cardSplit[3]}@{cardSplit[4]}@{cardSplit[5]}@{cardSplit[10]}", // ability@activate ability@active cost@gains action
+						cardSplit[6], // type
+						cardSplit[7], // top right
+						cardSplit[8], // bottom right
+						cardSplit[9]  // deck
+					)
+					{
+						hasImage = Structuring.ImageExists(cardSplit[0]) ? "true" : "false"
+					};
+				}
+
+				foreach (var card in deserialized.Cards)
+				{
+					bool includeCard = false;
+					string exportsPath = Structuring.GetFullPath(Path.Combine("Card Data", "-Exports"));
+					string cardPath = Path.Combine(exportsPath, card.Key + Structuring.FindExtension(exportsPath, card.Key));
+					if (File.Exists(cardPath))
+					{
+						foreach (var field in card.Value)
+						{
+							if (getAllCards) includeCard = true;
+							else
+							{
+								switch (field.Key)
+								{
+									case "Cost":
+										if (cards[card.Key].Cost != field.Value) includeCard = true;
+										break;
+									case "Strength":
+										if (cards[card.Key].Strength != field.Value) includeCard = true;
+										break;
+									case "Ability":
+										if (cards[card.Key].Ability != field.Value) includeCard = true;
+										break;
+									case "Type":
+										if (cards[card.Key].Type != field.Value) includeCard = true;
+										break;
+									case "TopRight":
+										if (cards[card.Key].TopRight != field.Value) includeCard = true;
+										break;
+									case "BottomRight":
+										if (cards[card.Key].BottomRight != field.Value) includeCard = true;
+										break;
+									case "Deck":
+										if (cards[card.Key].Deck != field.Value) includeCard = true;
+										break;
+									case "hasImage":
+										if (cards[card.Key].hasImage != field.Value) includeCard = true;
+										break;
+									default:
+										break;
+								}
+							}
+						}
+					}
+					else includeCard = true;
+					if (includeCard) cards.Remove(card.Key);
+				}
+				List<string> cardsToSkip = [];
+				foreach (var card in cards)
+				{
+					cardsToSkip.Add(card.Key);
+				}
+				return cardsToSkip;
 			}
-			List<string> cardsToSkip = [];
-			foreach (var card in cards)
+			catch (JsonException)
 			{
-				cardsToSkip.Add(card.Key);
+				return [];
 			}
-			return cardsToSkip;
 		}
 
 		/// <summary>
@@ -142,7 +157,7 @@ namespace Villainous_Card_Generator.CardGeneration
 		{
 			// First find and delete the current log file
 			string logFilePath = Structuring.GetFullPath(Path.Combine("logs", "all-data.json"));
-			if (File.Exists(logFilePath)) File.Delete(logFilePath);
+			if (File.Exists(logFilePath)) ClearLogFile();
 
 			// Use StreamWriter to write to the log file
 			using StreamWriter sw = File.CreateText(logFilePath);
@@ -168,6 +183,22 @@ namespace Villainous_Card_Generator.CardGeneration
 			sw.WriteLine(GetCardData());
 			sw.WriteLine("}");
 			sw.WriteLine("}");
+
+			sw.Close();
+		}
+
+		private static void ClearLogFile()
+		{
+			string logFilePath = Structuring.GetFullPath(Path.Combine("logs", "all-data.json"));
+			string? line;
+			try
+			{
+				File.WriteAllText(logFilePath, string.Empty);
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine("Exception: " + e.Message);
+			}
 		}
 
 		private static string GetSettingsData()
@@ -222,6 +253,7 @@ namespace Villainous_Card_Generator.CardGeneration
 
 				allCardData += $"\"{cardData[0]}\": {JsonSerializer.Serialize(cardObject)},";
 			}
+			if (allCardData == "") return "";
 			return allCardData[0..^1];
 		}
 	}
